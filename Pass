@@ -1,0 +1,56 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function instantTeleport(part)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        hrp.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+        task.wait(0.1)
+        hrp.CFrame = part.CFrame + Vector3.new(0, 2, 0)
+    end
+end
+
+local checkpoints = {}
+for _, obj in pairs(workspace:GetDescendants()) do
+    if obj:IsA("BasePart") then
+        local n = obj.Name:lower()
+        if n:find("checkpoint") or n:find("summit") then
+            table.insert(checkpoints, obj)
+        end
+    end
+end
+
+local teleportEnabled = false
+local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,200,0,100)
+frame.Position = UDim2.new(0.5,-100,0.75,0)
+frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+frame.Active = true
+frame.Draggable = true
+
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(1, -20, 0, 40)
+button.Position = UDim2.new(0,10,0,10)
+button.Text = "Start Teleport Loop"
+button.BackgroundColor3 = Color3.fromRGB(0,120,255)
+button.TextColor3 = Color3.new(1,1,1)
+button.TextSize = 20
+
+button.MouseButton1Click:Connect(function()
+    teleportEnabled = not teleportEnabled
+    button.Text = teleportEnabled and "Stop Teleport Loop" or "Start Teleport Loop"
+    task.spawn(function()
+        while teleportEnabled do
+            for i, part in ipairs(checkpoints) do
+                if not teleportEnabled then break end
+                instantTeleport(part)
+                task.wait(1)
+                if i == #checkpoints then
+                    task.wait(4) -- jeda sebelum balik ke awal lagi
+                end
+            end
+        end
+    end)
+end)
